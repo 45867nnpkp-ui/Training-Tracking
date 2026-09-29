@@ -1,0 +1,32 @@
+# Render Blueprint für die Trainings-App ("New +" -> "Blueprint" -> dieses Repo).
+# Legt die Postgres-Datenbank UND den Web Service an und verbindet sie.
+# Anleitung und Hinweise zu den Kosten: siehe DEPLOY.md.
+databases:
+  - name: training-db
+    plan: free # Achtung: Render löscht kostenlose Datenbanken nach 30 Tagen, siehe DEPLOY.md
+    region: frankfurt
+    databaseName: training
+    user: training
+
+services:
+  - type: web
+    name: training-tracking
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    # Beim Start: Datenbank-Tabellen anlegen/aktualisieren, Übungen eintragen, App starten.
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
+        fromDatabase:
+          name: training-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true # Render erzeugt automatisch einen zufälligen Wert
+      - key: APP_PASSWORD
+        sync: false # Render fragt beim Anlegen danach – dein Login-Passwort
