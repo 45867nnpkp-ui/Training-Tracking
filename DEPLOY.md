@@ -30,10 +30,16 @@ Die App läuft auf **Render**, genau wie das Alltags-Dashboard. Die Datei
 
 ## Aufs iPhone holen
 
-1. Die Render-Adresse in **Safari** öffnen und einloggen.
+1. Die Render-Adresse in **Safari** öffnen.
 2. Teilen-Symbol → **„Zum Home-Bildschirm“**.
-3. Die App einmal **mit Internet** öffnen. Danach funktioniert das Loggen
+3. Die App **vom Home-Bildschirm aus** öffnen und dort einloggen. Die
+   Home-Bildschirm-App hat ihren eigenen Speicher, getrennt von Safari, daher
+   ist ein Login in Safari dort nicht gültig.
+4. Die App einmal **mit Internet** öffnen. Danach funktioniert das Loggen
    im Gym auch ohne Netz, die Daten werden später automatisch hochgeladen.
+
+Tipp: Vor dem ersten Training im Gym einmal kurz Flugmodus an und die App
+öffnen, um zu sehen, dass sie offline startet.
 
 ## Wichtig: Kosten und Grenzen des kostenlosen Tarifs
 

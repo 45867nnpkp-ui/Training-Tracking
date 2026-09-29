@@ -112,6 +112,11 @@ export default function App() {
   async function finish() {
     if (!active || !boot) return;
     const payload = buildPayload(active, new Date());
+    if (payload.sets.length === 0) {
+      // Eine leere Einheit würde den Wechsel Oberkörper/Beine verfälschen.
+      if (window.confirm("Kein Satz abgehakt – die Einheit wird nicht gespeichert. Verwerfen?")) updateActive(null);
+      return;
+    }
     const records = personalRecords(boot, payload);
     await enqueue({ kind: "workout", id: payload.id, rev: Date.now(), payload });
     saveBoot(applyWorkoutToBootstrap(boot, payload));
