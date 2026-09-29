@@ -1,0 +1,154 @@
+// Datenmodell der Trainings-App (SPEC.md, Abschnitt 10).
+// Phase 1 nutzt Exercise, SessionTemplate, Workout und SetLog. Die übrigen
+// Tabellen sind schon angelegt, damit spätere Phasen ohne Umbau auskommen.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionType {
+  UPPER // Oberkörper
+  LOWER // Beine
+}
+
+model Exercise {
+  // Sprechende, stabile IDs (z. B. "brustpresse"), damit offline angelegte
+  // Sätze ohne Rückfrage beim Server auf die richtige Übung zeigen.
+  id                  String      @id
+  name                String
+  category            SessionType
+  isCompound          Boolean     @default(false) // Grundübung -> Aufwärmsätze
+  sets                Int
+  repMin              Int
+  repMax              Int
+  restMinSec          Int
+  restMaxSec          Int
+  incrementKg         Float
+  startWeightKg       Float? // null = kalibrieren
+  setupNote           String      @default("") // Maschineneinstellung, dauerhaft
+  hint                String      @default("") // fester Hinweis aus dem Plan
+  isBonus             Boolean     @default(false)
+  mainExerciseId      String? // gesetzt bei Ausweichübungen
+  mainExercise        Exercise?   @relation("Alternatives", fields: [mainExerciseId], references: [id])
+  alternatives        Exercise[]  @relation("Alternatives")
+  alternativePriority Int?
+  active              Boolean     @default(true)
+  sortOrder           Int         @default(0)
+  setLogs             SetLog[]
+}
+
+model SessionTemplate {
+  type        SessionType @id
+  exerciseIds String[] // geordnete Liste
+}
+
+enum PlannedSource {
+  STANDARD
+  HOLIDAY
+  RESCHEDULED
+  MANUAL
+}
+
+enum PlannedStatus {
+  PLANNED
+  MOVED
+  CANCELLED
+  DONE
+}
+
+model PlannedSession {
+  id           String        @id @default(cuid())
+  date         DateTime      @db.Date
+  type         SessionType
+  slotStart    DateTime
+  slotEnd      DateTime
+  hardEnd      DateTime?
+  source       PlannedSource @default(STANDARD)
+  status       PlannedStatus @default(PLANNED)
+  originalDate DateTime?     @db.Date
+  workouts     Workout[]
+
+  @@index([date])
+}
+
+model Workout {
+  // Die ID wird auf dem Handy erzeugt (UUID), damit das Hochladen nach einer
+  // Offline-Einheit beliebig oft wiederholt werden kann (idempotent).
+  id               String          @id
+  plannedSessionId String?
+  plannedSession   PlannedSession? @relation(fields: [plannedSessionId], references: [id])
+  type             SessionType
+  startedAt        DateTime
+  endedAt          DateTime?
+  isDeload         Boolean         @default(false)
+  sets             SetLog[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([startedAt])
+}
+
+model SetLog {
+  id          String    @id @default(cuid())
+  workoutId   String
+  workout     Workout   @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exerciseId  String
+  exercise    Exercise  @relation(fields: [exerciseId], references: [id])
+  setNumber   Int
+  weightKg    Float
+  reps        Int
+  rir         Int?
+  failure     Boolean   @default(false)
+  isWarmup    Boolean   @default(false)
+  note        String?
+  completedAt DateTime?
+
+  @@unique([workoutId, exerciseId, isWarmup, setNumber])
+  @@index([exerciseId])
+}
+
+model BodyMetric {
+  date     DateTime @id @db.Date
+  weightKg Float?
+  waistCm  Float?
+}
+
+enum Phase {
+  DIET
+  BULK
+}
+
+model ScheduleConfig {
+  id                  Int       @id @default(1)
+  timetableA          Json?
+  timetableB          Json?
+  abOverrides         Json? // { "2026-W40": "A", ... }
+  saturdayWorkUntil   String    @default("18:00")
+  travelMin           Int       @default(15)
+  gymOpen             String    @default("06:00")
+  gymClose            String    @default("22:00")
+  deloadIntervalWeeks Int       @default(7)
+  planStartDate       DateTime? @db.Date
+  phase               Phase     @default(DIET)
+  examPhaseUntil      DateTime? @db.Date
+}
+
+model CalendarCache {
+  source    String   @id
+  fetchedAt DateTime
+  events    Json
+  error     String?
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}

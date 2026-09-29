@@ -1,0 +1,36 @@
+{
+  "name": "training-tracking",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "start:prod": "prisma migrate deploy && tsx prisma/seed.ts && next start",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "next": "15.5.26",
+    "prisma": "6.19.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tsx": "4.23.15",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5",
+    "vitest": "^5.0.2"
+  }
+}
